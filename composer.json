@@ -1,0 +1,22 @@
+{
+    "name": "ayaseensd/ip-checker",
+    "description": "A Laravel package to check IP access using cURL",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ayaseensd\\IpChecker\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.2",
+        "illuminate/support": "^8.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ayaseensd\\IpChecker\\IpCheckerServiceProvider"
+            ]
+        }
+    }
+}
