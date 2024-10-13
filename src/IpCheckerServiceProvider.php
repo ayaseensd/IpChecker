@@ -8,8 +8,8 @@ class IpCheckerServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        if (\$this->app->runningInConsole()) {
-            \$this->commands([
+        if ($this->app->runningInConsole()) {
+            $this->commands([
                 Console\CheckIpAccess::class,
             ]);
         }
