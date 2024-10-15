@@ -10,7 +10,7 @@ The `Ayaseensd\IpChecker` package provides a Laravel console command that allows
 To install the package, add it to your project via composer:
 
 ```bash
-composer require ayaseensd/ipchecker
+composer require ayaseensd/ip-checker
 ```
 
 Once installed, register the service provider by adding it to the `config/app.php` file (if needed):
