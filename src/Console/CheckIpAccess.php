@@ -37,7 +37,6 @@ class CheckIpAccess extends Command
     protected function testIpAccess($ip, $port, $protocol)
     {
         $address = "$protocol://$ip:$port";
-        echo $address;
         $timeout = 10;
         $errno = null;
         $errstr = null;
