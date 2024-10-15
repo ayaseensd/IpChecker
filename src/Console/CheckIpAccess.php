@@ -6,54 +6,73 @@ use Illuminate\Console\Command;
 
 class CheckIpAccess extends Command
 {
-    protected $signature = 'check:ip-access {ips* : IPs or IP ranges to check} {--https : Use HTTPS instead of HTTP for the requests}';
+    protected $signature = 'check:ip-access {ips* : IPs or IP ranges to check} {--port= : Use specific port for the requests, default is 80} {--udp : use udp protocol, default is tcp}';
     protected $description = 'Check if specified IP addresses or IP ranges are accessible using HTTP or HTTPS';
 
     public function handle()
     {
         $ipRanges = $this->argument('ips');
-        $useHttps = $this->option('https');
-        $protocol = $useHttps ? 'https' : 'http';
+        $port = $this->option('port') ?? '80';
+        $protocol = $this->option('udp') ? 'udp' : 'tcp';
+
 
         foreach ($ipRanges as $ipRange) {
             $ips = $this->getIpsFromRange($ipRange);
 
+
             foreach ($ips as $ip) {
-                $this->info("Testing access to IP: {$ip} using {$protocol}");
+                $this->info("Testing access to IP: {$ip} using {$port}");
 
-                $isAccessible = $this->testIpAccess($ip, $protocol);
+                $isAccessible = $this->testIpAccess($ip, $port, $protocol);
 
-                if ($isAccessible) {
+                if ($isAccessible === true) {
                     $this->info("Successfully accessed IP: {$ip}");
                 } else {
-                    $this->error("Failed to access IP: {$ip}");
+                    $this->error($isAccessible);
                 }
             }
         }
     }
 
-    protected function testIpAccess($ip, $protocol)
+    protected function testIpAccess($ip, $port, $protocol)
     {
-        $ch = curl_init("{$protocol}://{$ip}");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        $address = "$protocol://$ip:$port";
+        echo $address;
+        $timeout = 10;
+        $errno = null;
+        $errstr = null;
+        $connection = @stream_socket_client($address, $errno, $errstr, $timeout);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        $isAccessible = $httpCode >= 200 && $httpCode < 300;
-
-        curl_close($ch);
-
-        return $isAccessible;
+        if ($connection) {
+            fclose($connection);
+            return true;
+        } else {
+            return "IP $ip is not reachable on port $port. Error: $errstr ($errno)";
+        }
     }
 
     protected function getIpsFromRange($ipRange)
     {
         if (strpos($ipRange, '/') !== false) {
             list($subnet, $mask) = explode('/', $ipRange);
-            return [$subnet];
+            return $this->cidrToRange($subnet, $mask);
         }
+
         return [$ipRange];
+    }
+
+    protected function cidrToRange($subnet, $mask)
+    {
+        $ip = ip2long($subnet);
+
+        $hostsCount = pow(2, (32 - $mask));
+
+        $ips = [];
+
+        for ($i = 0; $i < $hostsCount; $i++) {
+            $ips[] = long2ip($ip + $i);
+        }
+
+        return $ips;
     }
 }
